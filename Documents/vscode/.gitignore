@@ -1,0 +1,6 @@
+Library/
+Documents/
+.Trash/
+*.log
+__pycache__/
+.DS_Store
