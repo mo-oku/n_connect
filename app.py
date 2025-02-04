@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, session
+from flask import Flask, render_template, redirect, url_for
 import requests
 import base64
 import json
@@ -85,19 +86,6 @@ def add_to_notion(n_api_key, n_database_id, character):
             }
         }
     }
-
-    """
-    data = {
-        "parent": {"database_id": n_database_id},
-        "properties": {
-            "名前": {"title": [{"text": {"content": character["data"]["name"]}}]},
-            "HP": {"number": character["data"]["status"][0]["value"]},
-            "MP": {"number": character["data"]["status"][1]["value"]},
-            "SAN": {"number": character["data"]["status"][2]["value"]},
-            "アイコンURL": {"url": character["data"]["iconUrl"]}
-        }
-    }
-    """
     response = requests.post(Notion_url, headers=headers, json=data)
     return response.status_code == 200
 
@@ -132,6 +120,22 @@ def index():
     # 過去のデータを取得して表示
     entries = get_entries()
     return render_template("index.html", message=message, entries=entries)
+
+"""500エラー（Internal Server Error）発生時の処理"""
+@app.errorhandler(500)
+def internal_server_error(e):
+    return redirect(url_for('error_500_page'))
+
+"""500エラーのリダイレクト先ページ"""
+@app.route("/error_500")
+def error_500_page():
+    return render_template("500.html"), 500
+
+"""例：強制的にエラーを起こす（テスト用）"""
+@app.route("/cause_error")
+def cause_error():
+    1 / 0  # これでゼロ除算エラーを発生させる
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000, debug=False)
