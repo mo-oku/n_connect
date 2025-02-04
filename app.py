@@ -11,7 +11,7 @@ htmlで入力→Notionに追加
 """
 
 app = Flask(__name__)
-app.secret_key = "super_secret_key"  # セッション管理用のキー（適当に変更）
+app.secret_key = "super_secret_key"  # セッション管理用のキー
 DB_NAME = "/Users/kosari/Documents/vscode/notion_data.db"
 
 # Notion APIの設定
@@ -19,8 +19,9 @@ DB_NAME = "/Users/kosari/Documents/vscode/notion_data.db"
 def decode_base64(encoded_data):
     if encoded_data.endswith('"}]}}') :
         """いあきゃらならそのままJSONに変換"""
-        json_data = json.loads(encoded_data)
-        return json_data 
+        json_data = json.loads(encoded_data[:-2] + ',"faces": [],"color":"#888888","memo":""' + encoded_data[-2:])
+        return json_data
+    
     else :
         """ココフォならBase64デコードしてJSONに変換"""
         try:
@@ -29,8 +30,10 @@ def decode_base64(encoded_data):
             decoded_str = urllib.parse.unquote(decoded_str)
             json_data = json.loads(decoded_str)
             return json_data
+        
         except Exception as e:
             return {"error": str(e)}
+
 
 def add_to_notion(n_api_key, n_database_id, character):
     """Notionにデータを送信"""
@@ -41,6 +44,49 @@ def add_to_notion(n_api_key, n_database_id, character):
         "Notion-Version": "2022-06-28"
     }
 
+    # ステータス情報
+    status_labels = ["HP", "MP", "SAN"]
+    status_values = {
+        label: {"number": int(character["data"].get("status", [{}])[i].get("value", 0))}
+        for i, label in enumerate(status_labels)
+    }
+
+    # パラメータ情報
+    params_labels = ["STR", "CON", "POW", "DEX", "APP", "SIZ", "INT", "EDU"]
+    params_values = {
+        label: {"number": int(character["data"].get("params", [{}])[i].get("value", 0))}
+        for i, label in enumerate(params_labels)
+    }
+
+    data = {
+        "parent": {"database_id": n_database_id},
+        "properties": {
+            "名前": {"title": [{"text": {"content": character["data"]["name"]}}]},
+            **status_values,  # HP, MP, SAN
+            **params_values,  # STR, CON, ...
+            "差分": {
+                "files": [
+                    {"name": face["label"] or f"差分{i+1}", "external": {"url": face["iconUrl"]}}
+                    for i, face in enumerate(character["data"].get("faces", []))
+                ]
+            },
+            "アイコンURL": {"url": character["data"]["iconUrl"]},
+            "ココフォリアに貼り付け": {
+                "rich_text": [{"text": {"content": json.dumps(character, ensure_ascii=False)}}]
+            },
+            "チャットパレット": {
+                "rich_text": [{"text": {"content": character["data"]["commands"]}}]
+            },
+            "参照URL": {
+                "url": character["data"].get("externalUrl") or None
+            },
+            "カラーコード": {
+                "rich_text": [{"text": {"content":  '$$\color{#FFFFFF}\colorbox{' + character["data"].get("color") + '}{\\textsf{' + character["data"].get("color")[1:] + '}}$$'}}]
+            }
+        }
+    }
+
+    """
     data = {
         "parent": {"database_id": n_database_id},
         "properties": {
@@ -51,9 +97,11 @@ def add_to_notion(n_api_key, n_database_id, character):
             "アイコンURL": {"url": character["data"]["iconUrl"]}
         }
     }
-
+    """
     response = requests.post(Notion_url, headers=headers, json=data)
     return response.status_code == 200
+
+
 
 @app.route("/", methods=["GET", "POST"])
 def index():
