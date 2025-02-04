@@ -71,7 +71,7 @@ def add_to_notion(n_api_key, n_database_id, character):
                     for i, face in enumerate(character["data"].get("faces", []))
                 ]
             },
-            "アイコンURL": {"url": character["data"]["iconUrl"]},
+            "アイコンURL": {"url": character["data"]["iconUrl"] or None},
             "ココフォリアに貼り付け": {
                 "rich_text": [{"text": {"content": json.dumps(character, ensure_ascii=False)}}]
             },
