@@ -5,26 +5,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="file:///Users/kosari/Documents/vscode/n_connect/static/style.css">
     <title>ココフォリア駒デコーダー</title>
 </head>
 
 <body>
-    <h1>エンコードデータを入力してNotionに送信</h1>
+
+    <header>
+        <h1>CoC駒データをNotionに送信するツール</h1>
+        <ol>
+            <li>自分のNotionからAPIキーとデータベースIDを取得</li>
+            <li>ココフォリアから駒をコピー または いあきゃらから駒出力</li>
+            <li>各項目を入力して送信！</li>
+            <li>自分のNotionに駒データが入力される！</li>
+        </ol>
+        <p><a href="https://proud-earwig-79b.notion.site/CoC-Notion-18daf2e6ffba80e99daed59ae65a9a98?pvs=4" target=”_blank”>更新履歴・詳しい使い方・当ツール用データベーステンプレ配布ページ</a></p>
+    </header>
+
+<div class="main">
     <form method="POST">
-        <label>Notion API キー:</label>
+        <label>Notion API キー</label>
         <input type="password" name="n_api_key" value="{{ request.form.get('n_api_key', '') }}" required><br><br>
     
-        <label>Notion データベース ID:</label>
+        <label>Notion データベース ID</label>
         <input type="text" name="n_database_id" value="{{ request.form.get('n_database_id', '') }}" required><br><br>
     
-        <label>エンコードデータ:</label><br>
-        <textarea name="encoded_data" rows="5" cols="50" placeholder="ここにエンコードデータを貼り付け" required></textarea><br><br>
+        <label>駒データ</label><br>
+        <textarea name="encoded_data" placeholder="ココフォリア駒コピーまたはいあきゃら駒出力をここにペースト" required></textarea><br><br>
     
         <button type="submit">送信</button>
     </form>
     
     <p>{{ message }}</p>
+</div>
 
+<div class="log">
     <h2>結果ログ</h2>
     <table border="1">
         <tr>
@@ -35,13 +50,18 @@
         {% for log in logs %}
         <tr>
             {% set parts = log.split(" - ") %}
-            <td>{{ parts[0] }}</td>
-            <td>{{ parts[1] }}</td>
-            <td>{{ parts[2] }}</td>
+            <td class="time">{{ parts[0] }}</td>
+            <td class="info">{{ parts[1] }}</td>
+            <td class="message">{{ parts[2] }}</td>
         </tr>
         {% endfor %}
     </table>
-
+</div>
+<hr>
 </body>
+
+<footer>
+    <p>不具合などの緊急的な報告は <a href="https://x.com/M99245" target=”_blank”>Twitter(X)@M99245</a> のDMまで</p>
+</footer>
 </html>
 

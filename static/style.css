@@ -1,0 +1,129 @@
+/* 📌 全体のスタイル */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f8f9fa;
+    margin: 20px;
+    padding: 20px;
+}
+
+/* 📌 ヘッダーフッター */
+header, footer {
+    width: 70%;
+    padding: 20px;
+    margin: auto;
+}
+
+/* 📌 main */
+.main {
+    max-width: 70%;
+    margin:0 auto;
+}
+
+/* 📌 フォームのスタイル */
+form {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin: auto;
+}
+
+/* 📌 入力フィールドのスタイル */
+input {
+    width: 98%;
+    padding: 10px;
+    margin: 8px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+textarea {
+    width: 98%;
+    height: 200px;
+    padding: 10px;
+    margin: 8px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+    resize: none;
+    overflow-y: scroll;
+}
+
+/* 📌 送信ボタンのスタイル */
+button {
+    background-color: #ff330082;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    width: 100%;
+}
+
+/* 📌 ボタンのホバー時のエフェクト */
+button:hover {
+    background-color: #ff3300f0;
+}
+
+/* 📌 ログ */
+.log {
+    max-width: 80%;
+    padding: 10px;
+    margin:0 auto;
+}
+
+/* 📌 ログのテーブル */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background: #ffffff;
+}
+
+th {
+    height: 10px;
+    background-color: #cbcbcb;
+    color: white;
+    border: 1px solid #ddd;
+    padding: 2px;
+    text-align: center;
+}
+td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: center;
+}
+.time {
+    width: 30%;
+}
+.info {
+    width: 10%;
+}
+
+
+/* 📌 aタグ */
+a {
+    text-decoration:none;
+    }
+    
+    a:link {
+    color:#407cff;
+    }
+    
+    a:visited {
+    color:#6600FF;
+    }
+    
+    a:hover {
+    color:#ff5739;
+    text-decoration:underline;
+    }
+
+
+/* 📌 エラーページ*/
+.error {
+    font-weight: bold;
+    padding: 10px;
+}
