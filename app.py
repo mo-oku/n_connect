@@ -1,6 +1,8 @@
-from flask import Flask, render_template, request, session
+# from flask import Flask, render_template, request, session
 from flask import Flask, render_template, redirect, url_for
+from flask import Flask, request, render_template
 from database import save_entry, get_entries  # データベース機能をインポート！
+import logging
 import requests
 import base64
 import json
@@ -15,19 +17,23 @@ htmlで入力→Notionに追加
 
 app = Flask(__name__)
 app.secret_key = "super_secret_key"  # セッション管理用のキー
-DB_NAME = "/Users/kosari/Documents/vscode/notion_data.db"
-NOW = datetime.datetime.now()
+# DB_NAME = "/Users/kosari/Documents/vscode/notion_data.db"
+NOW = datetime.datetime.now() # 時間
 
-# Notion APIの設定
+# ログ設定（ログをファイルに記録）
+LOG_FILE = "app.log"
+logging.basicConfig(filename=LOG_FILE, level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 def decode_base64(encoded_data):
     if encoded_data.endswith('"}]}}') :
-        """いあきゃらならそのままJSONに変換"""
+        # いあきゃらならそのままJSONに変換
         json_data = json.loads(encoded_data[:-2] + ',"faces": [],"color":"#888888","memo":""' + encoded_data[-2:])
         return json_data
     
     else :
-        """ココフォならBase64デコードしてJSONに変換"""
+        # ココフォならBase64デコードしてJSONに変換
         try:
             decoded_bytes = base64.b64decode(encoded_data.removeprefix('{"kind":"encoded","data":"').removesuffix('"}'))
             decoded_str = decoded_bytes.decode("utf-8")
@@ -40,7 +46,7 @@ def decode_base64(encoded_data):
 
 
 def add_to_notion(n_api_key, n_database_id, character):
-    """Notionにデータを送信"""
+    # Notionにデータを送信
     Notion_url = "https://api.notion.com/v1/pages"
     headers = {
         "Authorization": f"Bearer {n_api_key}",
@@ -96,6 +102,7 @@ def add_to_notion(n_api_key, n_database_id, character):
     return response.status_code == 200
 
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -104,29 +111,42 @@ def index():
 
     if request.method == "POST":
         encoded_data = request.form["encoded_data"]
-        decoded_data = decode_base64(encoded_data)
         n_api_key = request.form["n_api_key"]
         n_database_id = request.form["n_database_id"]
-
-
-        # データベースに保存
-        save_entry(n_api_key, n_database_id, encoded_data)
-
-        # デコード処理
         decoded_data = decode_base64(encoded_data)
-        if "error" not in decoded_data:
-            success = add_to_notion(n_api_key, n_database_id, decoded_data)
-            if success : message = "✅ データ保存＆Notion送信成功：" + NOW.strftime('%Y.%m.%d %H:%M:%S')
 
+        if n_api_key and n_database_id and encoded_data:
+
+            # データベースに保存
+            save_entry(n_api_key, n_database_id, encoded_data)
+
+            # デコード処理
+            decoded_data = decode_base64(encoded_data)
+            if "error" not in decoded_data:
+                success = add_to_notion(n_api_key, n_database_id, decoded_data)
+                if success : message = "✅ データ保存＆Notion送信成功："
+
+                else:
+                    return render_template("index.html", message="Notion追加失敗：")
             else:
-                return render_template("index.html", message="Notion追加失敗：" + NOW.strftime('%Y.%m.%d %H:%M:%S'))
+                message = "⚠️ デコードエラー："
         else:
-            message = "⚠️ デコードエラー：" + NOW.strftime('%Y.%m.%d %H:%M:%S')
+            message = "⚠️ すべてのフィールドを入力してください："
+
+        # ログに出力
+        app.logger.info( message )
             
+    # ログファイルを読み込む
+    logs = []
+    try:
+        with open(LOG_FILE, "r") as log_file:
+            logs = log_file.readlines()[-10:]  # 直近 10 件を取得
+    except FileNotFoundError:
+        logs = ["ログがありません。"]
 
     # 過去のデータを取得して表示
     entries = get_entries()
-    return render_template("index.html", message=message, entries=entries)
+    return render_template("index.html", message=message, entries=entries, logs=logs)
 
 """500エラー（Internal Server Error）発生時の処理"""
 @app.errorhandler(500)
