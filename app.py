@@ -1,10 +1,12 @@
 from flask import Flask, render_template, request, session
 from flask import Flask, render_template, redirect, url_for
+from database import save_entry, get_entries  # データベース機能をインポート！
 import requests
 import base64
 import json
 import urllib.parse
-from database import save_entry, get_entries  # データベース機能をインポート！
+import datetime
+
 
 
 """
@@ -14,6 +16,7 @@ htmlで入力→Notionに追加
 app = Flask(__name__)
 app.secret_key = "super_secret_key"  # セッション管理用のキー
 DB_NAME = "/Users/kosari/Documents/vscode/notion_data.db"
+NOW = datetime.datetime.now()
 
 # Notion APIの設定
 
@@ -78,6 +81,9 @@ def add_to_notion(n_api_key, n_database_id, character):
             "チャットパレット": {
                 "rich_text": [{"text": {"content": character["data"]["commands"]}}]
             },
+            "キャラクターメモ": {
+                "rich_text": [{"text": {"content": character["data"].get("memo") or ""}}]
+            },
             "参照URL": {
                 "url": character["data"].get("externalUrl") or None
             },
@@ -110,11 +116,12 @@ def index():
         decoded_data = decode_base64(encoded_data)
         if "error" not in decoded_data:
             success = add_to_notion(n_api_key, n_database_id, decoded_data)
-            if success : message = "✅ データ保存＆Notion送信成功"
+            if success : message = "✅ データ保存＆Notion送信成功：" + NOW.strftime('%Y.%m.%d %H:%M:%S')
+
             else:
-                return render_template("index.html", message="Notion追加失敗")
+                return render_template("index.html", message="Notion追加失敗：" + NOW.strftime('%Y.%m.%d %H:%M:%S'))
         else:
-            message = "⚠️ デコードエラー"
+            message = "⚠️ デコードエラー：" + NOW.strftime('%Y.%m.%d %H:%M:%S')
             
 
     # 過去のデータを取得して表示
