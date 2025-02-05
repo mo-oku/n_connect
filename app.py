@@ -1,7 +1,8 @@
 # from flask import Flask, render_template, request, session
 from flask import Flask, render_template, redirect, url_for
 from flask import Flask, request, render_template
-from database import save_entry, get_entries  # データベース機能をインポート！
+from flask import Flask, send_from_directory
+from database import save_entry, get_entries
 import logging
 import requests
 import base64
@@ -162,6 +163,11 @@ def error_500_page():
 @app.route("/cause_error")
 def cause_error():
     1 / 0  # これでゼロ除算エラーを発生させる
+
+
+@app.route('/static/<path:filename>')
+def static_files(filename):
+    return send_from_directory('static', filename, cache_timeout=3600)  # 1時間キャッシュ
 
 
 if __name__ == "__main__":
