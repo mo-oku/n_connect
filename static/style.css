@@ -127,3 +127,56 @@ a {
     font-weight: bold;
     padding: 10px;
 }
+
+
+/* ~~~~~~~~~~~~~~~~~~~~~~ レスポンシブ設定 ~~~~~~~~~~~~~~~~~~~~~~ */
+@media (max-width: 768px){
+    body{
+        width: 80%;
+        font-size: 8px;
+        padding: 0px;
+        margin:0 auto;
+    }
+    /* 📌 ヘッダーフッター */
+    header, footer {
+        width: 70%;
+        margin: auto;
+        padding: 10px;
+    }
+    .main {
+        max-width: 80%;
+        font-size:10px;
+        margin:0 auto;
+    }
+    /* 📌 フォームのスタイル */
+    form {
+        background: #ffffff;
+        padding: 10px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin: auto;
+    }
+    input {
+        width: 90%;
+        font-size: 10px;
+    }
+    textarea {
+        width: 90%;
+        height: 100px;
+        font-size: 10px;
+    }
+    .log {
+        max-width: 80%;
+        padding: 0px;
+        margin:0 auto;
+    }
+    table {
+        font-size: 5px;
+        margin-top: 10px;
+    }
+    td {
+        border: 1px solid #ddd;
+        padding: 2px;
+        text-align: center;
+    }
+}
