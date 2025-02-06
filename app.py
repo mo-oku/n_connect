@@ -4,7 +4,7 @@ from flask import Flask, request, render_template
 from flask import Flask, send_from_directory
 from database import save_entry, get_entries
 from flask import Flask, request
-from datetime import datetime
+import time
 import requests
 import base64
 import json
@@ -24,15 +24,17 @@ app.secret_key = "super_secret_key"  # セッション管理用のキー
 """
 LOG_FILE = "app.log"
 
-
 """
 ローカル時間（JST）にする設定
 """
 # JST（日本時間）にする設定
-def jst_time(*args):
-    return datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).timetuple()
+def jst_time(epoch_time=None):
+    if epoch_time is None:
+        epoch_time = time.time()  # 現在時刻を取得
+    return time.localtime(epoch_time + 9 * 3600)  # UTC時間から9時間足す
 
 logging.Formatter.converter = jst_time
+
 
 logging.basicConfig(
     filename=LOG_FILE,
@@ -40,12 +42,6 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S"
 )
-"""logging.Formatter.converter = datetime.fromtimestamp
-logging.basicConfig(
-      filename=LOG_FILE, level=logging.INFO,
-      format="%(asctime)s - %(levelname)s - %(message)s",
-      datefmt="%Y-%m-%d %H:%M:%S"
-      )"""
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 """
@@ -144,9 +140,6 @@ def add_to_notion(n_api_key, n_database_id, character):
         return response.status_code == 200
     else :
         return response.status_code == 200
-
-
-
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
