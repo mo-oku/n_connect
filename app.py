@@ -159,7 +159,7 @@ def index():
         else:
             message = "⚠️ すべてのフィールドを入力してください"
 
-        timestamp = datetime.datetime.now() + datetime.timedelta(hours=9).strftime("%Y-%m-%d %H:%M:%S")
+        timestamp = (datetime.datetime.now() + datetime.timedelta(hours=9)).strftime("%Y-%m-%d %H:%M:%S")
         log_entry = f"{timestamp} - {message}"
 
         session["logs"].append(log_entry)  # セッションにログを追加
