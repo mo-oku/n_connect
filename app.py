@@ -10,7 +10,6 @@ import base64
 import json
 import urllib.parse
 import logging
-import os
 
 
 """
@@ -24,13 +23,29 @@ app.secret_key = "super_secret_key"  # セッション管理用のキー
 ログ設定（ログをファイルに記録）
 """
 LOG_FILE = "app.log"
-# ローカル時間（JST）にする設定
-logging.Formatter.converter = datetime.fromtimestamp
+
+
+"""
+ローカル時間（JST）にする設定
+"""
+# JST（日本時間）にする設定
+def jst_time(*args):
+    return datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).timetuple()
+
+logging.Formatter.converter = jst_time
+
+logging.basicConfig(
+    filename=LOG_FILE,
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+)
+"""logging.Formatter.converter = datetime.fromtimestamp
 logging.basicConfig(
       filename=LOG_FILE, level=logging.INFO,
       format="%(asctime)s - %(levelname)s - %(message)s",
       datefmt="%Y-%m-%d %H:%M:%S"
-      )
+      )"""
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 """
@@ -167,17 +182,18 @@ def index():
         else:
             message = "⚠️ すべてのフィールドを入力してください"
 
-        # ログに出力
-        app.logger.info( message )
-            
+    # ログに出力
+    app.logger.info( message )
     # ログファイルを読み込む
     logs = []
     try:
         with open(LOG_FILE, "r") as log_file:
             logs = log_file.readlines()[-10:]  # 直近 10 件を取得
-            logs.reverse()
+            if logs:  # ログが存在する場合のみ reverse()
+                logs.reverse()
     except FileNotFoundError:
         logs = ["ログがありません。"]
+
 
     # 過去のデータを取得して表示
     entries = get_entries()
