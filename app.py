@@ -130,11 +130,13 @@ def add_to_notion(n_api_key, n_database_id, character):
 
 @app.before_request
 def initialize_log():
-    """リクエストごとに個別ログを初期化"""
-    g.logs = []  # ユーザーごとのログを一時的に保持
+     # リクエストごとに初期化
+    g.logs = []
+    g.n_api_key = []
+    g.n_database_id = []
 
 def log_message(now_time, message):
-    """個別ログを追加"""
+    # 個別ログを追加
     log_entry = f"{now_time} - {message}"
     g.logs.append(log_entry)
 
@@ -171,10 +173,15 @@ def index():
                 message = "⚠️ デコードエラー"
         else:
             message = "⚠️ すべてのフィールドを入力してください"
-
+        
+        # ログを一時保存
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        log_entry = f"{timestamp} - {message}"
-        logs.append(log_entry)
+        logs.append(f"{timestamp} - {message}")
+
+        # リダイレクトしてリロード時の "POST" を防ぐ　session["message"] = message  # メッセージをセッションに一時保存
+        return redirect(url_for("index"))
+
+    # GET リクエスト時はセッションのメッセージを表示し、リセットmessage = session.pop("message", "")
 
     return render_template(
         "index.html",
