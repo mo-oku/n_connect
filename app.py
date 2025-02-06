@@ -34,6 +34,17 @@ def jst_time(epoch_time=None):
 
 logging.Formatter.converter = jst_time
 
+logging.basicConfig(filename="app.log",level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s",
+                        datefmt="%Y-%m-%d %H:%M:%S")
+
+"""
+logging.basicConfig(
+    filename=LOG_FILE,
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+)
+
 # ログ設定（最大1MB、5ファイルまで保存）
 handler = RotatingFileHandler(LOG_FILE, maxBytes=1_000_000, backupCount=5, encoding="utf-8")
 handler.setLevel(logging.INFO)
@@ -42,7 +53,7 @@ handler.setFormatter(formatter)
 
 app.logger.addHandler(handler)
 app.logger.setLevel(logging.INFO)
-
+"""
 
 """
 logging.basicConfig(
@@ -187,6 +198,15 @@ def index():
 
     # ログに出力
     app.logger.info( message )
+      # ログファイルを読み込む
+    logs = []
+    try:
+        with open(LOG_FILE, "r") as log_file:
+            logs = log_file.readlines()[-10:]  # 直近 10 件を取得
+    except FileNotFoundError:
+        logs = ["ログがありません。"]
+    
+    """
     # ログファイルを読み込む
     logs = []
     try:
@@ -196,7 +216,7 @@ def index():
                 logs.reverse()
     except FileNotFoundError:
         logs = ["ログがありません。"]
-
+     """
 
     # 過去のデータを取得して表示
     entries = get_entries()
