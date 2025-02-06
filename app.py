@@ -196,9 +196,6 @@ def internal_server_error(e):
 # 500エラーのリダイレクト先ページ
 @app.route("/error_500")
 def error_500_page():
-    # 500エラーが発生したらログをリセットする
-    if os.path.exists(LOG_FILE):
-        open(LOG_FILE, 'w').close()  # ファイルの中身を空にする
     return render_template("500.html"), 500
 
 
