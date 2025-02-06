@@ -145,7 +145,10 @@ def log_message(now_time, message):
 def index():
 
     session.permanent = False  # アクセスを切ったらセッションが消える
-    session.setdefault("logs", [])  # KeyError を防ぐための初期化
+    # KeyError を防ぐための初期化
+    session.setdefault("logs", [])
+    session.setdefault("n_api_key", "")
+    session.setdefault("n_database_id", "")
 
     message = ""
     logs = []
