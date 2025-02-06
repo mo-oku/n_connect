@@ -132,8 +132,6 @@ def add_to_notion(n_api_key, n_database_id, character):
 def initialize_log():
      # リクエストごとに初期化
     g.logs = []
-    g.n_api_key = []
-    g.n_database_id = []
 
 def log_message(now_time, message):
     # 個別ログを追加
@@ -178,10 +176,12 @@ def index():
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         logs.append(f"{timestamp} - {message}")
 
-        # リダイレクトしてリロード時の "POST" を防ぐ　session["message"] = message  # メッセージをセッションに一時保存
+        # リダイレクトしてリロード時の "POST" を防ぐ
+        session["message"] = message  # メッセージをセッションに一時保存
         return redirect(url_for("index"))
 
-    # GET リクエスト時はセッションのメッセージを表示し、リセットmessage = session.pop("message", "")
+    # GET リクエスト時はセッションのメッセージを表示し、リセット
+    message = session.pop("message", "")
 
     return render_template(
         "index.html",
