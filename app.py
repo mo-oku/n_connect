@@ -135,13 +135,8 @@ def add_to_notion(n_api_key, n_database_id, character):
 def index():
 
     session.permanent = False  # アクセスを切ったらセッションが消える
-    # セッション初期化（KeyError防止）
-    if "logs" not in session:
-        session["logs"] = []
-    if "n_api_key" not in session:
-        session["n_api_key"] = ""
-    if "n_database_id" not in session:
-        session["n_database_id"] = ""
+    # KeyError を防ぐために空のリストを作成
+    session.setdefault("logs", [])  
 
     message = ""
 
@@ -157,36 +152,21 @@ def index():
             decoded_data = decode_base64(encoded_data)
             if "error" not in decoded_data:
                 success = add_to_notion(session["n_api_key"], session["n_database_id"], decoded_data)
-                message = "✅ データ保存＆Notionに追加成功！" if success else "Notionへの追加失敗"
+                if success :
+                    message = "✅ データ保存＆Notionに追加成功！" if success else "Notionへの追加失敗"
             else:
                 message = "⚠️ デコードエラー"
         else:
             message = "⚠️ すべてのフィールドを入力してください"
-        
-        # ログをセッションに保存
+
         timestamp = datetime.datetime.now() + datetime.timedelta(hours=9).strftime("%Y-%m-%d %H:%M:%S")
-        session["logs"].append(f"{timestamp} - {message}")
-        session.modified = True  # セッション更新
+        log_entry = f"{timestamp} - {message}"
 
-        # セッションのAPIキーとDB IDはリセットしておく（リロード時に消える）
-        session.pop("n_api_key", None)
-        session.pop("n_database_id", None)
+        session["logs"].append(log_entry)  # セッションにログを追加
+        session.modified = True  # セッションを更新（Flask の仕様）
 
-        # リダイレクトしてリロード時の "POST" を防ぐ
-        session["message"] = message  # メッセージをセッションに一時保存
-        return redirect(url_for("index"))
-
-    # GET リクエスト時はセッションのメッセージを表示し、リセット
-    message = session.pop("message", "")
-    logs = session.pop("logs", [])  # セッションのログもリセット
-
-    return render_template(
-        "index.html",
-        n_api_key=session["n_api_key"],
-        n_database_id=session["n_database_id"],
-        message=message,
-        logs=logs
-    )
+    logs = session["logs"]  # セッションのログを取得
+    return render_template("index.html", logs=logs)  # HTML にログを渡す
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -211,4 +191,4 @@ def static_files(filename):
 """
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000, debug=tuple)
+    app.run(host="0.0.0.0", port=10000, debug=True)
