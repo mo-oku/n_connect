@@ -16,6 +16,7 @@ from flask import Flask, g, request
 import datetime
 from flask import Flask, render_template, request, session
 import datetime
+from datetime import timedelta
 
 """
 htmlで入力→Notionに追加
@@ -25,6 +26,7 @@ htmlで入力→Notionに追加
 
 app = Flask(__name__)
 app.secret_key = "super_secret_key"  # セッション管理用のキー
+app.permanent_session_lifetime = timedelta(minutes=60) # -> 5分 #(days=5) -> 5日保存
 
 
 
@@ -166,7 +168,15 @@ def index():
         session.modified = True  # セッションを更新（Flask の仕様）
 
     logs = session["logs"]  # セッションのログを取得
-    return render_template("index.html", logs=logs)  # HTML にログを渡す
+    session.pop('encoded_data', None)
+    
+    return render_template(
+        "index.html",
+        n_api_key=session["n_api_key"],
+        n_database_id=session["n_database_id"],
+        message=message,
+        logs=logs
+    )
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
