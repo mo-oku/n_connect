@@ -25,7 +25,7 @@ app.secret_key = "super_secret_key"  # セッション管理用のキー
 """
 LOG_FILE = "app.log"
 # ローカル時間（JST）にする設定
-logging.Formatter.converter = datetime.datetime.fromtimestamp
+logging.Formatter.converter = datetime.fromtimestamp
 logging.basicConfig(
       filename=LOG_FILE, level=logging.INFO,
       format="%(asctime)s - %(levelname)s - %(message)s",
