@@ -104,22 +104,27 @@ def add_to_notion(n_api_key, n_database_id, character):
         }
     }
     response = requests.post(Notion_url, headers=headers, json=data)
+    
+    if character["data"]["iconUrl"] :
+        # ページの作成とidの取得
+        new_page = response.json()
+        new_page_id = new_page["id"]
 
-    # ページの作成とidの取得
-    new_page = response.json()
-    new_page_id = new_page["id"]
+        # ページにカバー画像を追加
+        add_content_url = f"https://api.notion.com/v1/pages/{new_page_id}"
+        data_add = {
+                "cover": {
+                    "type": "external",
+                    "external": {
+                                "url": character["data"].get("iconUrl") or ""
+                                }}
+        }
+        response = requests.patch(add_content_url, headers=headers, json=data_add)
+        return response.status_code == 200
+    else :
+        return response.status_code == 200
 
-    # ページにカバー画像を追加
-    add_content_url = f"https://api.notion.com/v1/pages/{new_page_id}"
-    data_add = {
-            "cover": {
-                "type": "external",
-                "external": {
-                              "url": character["data"].get("iconUrl") or ""
-                              }}
-    }
-    response = requests.patch(add_content_url, headers=headers, json=data_add)
-    return response.status_code == 200
+
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -136,7 +141,7 @@ def index():
         encoded_data = request.form["encoded_data"]
         n_api_key = request.form["n_api_key"]
         n_database_id = request.form["n_database_id"]
-        decoded_data = decode_base64(encoded_data)
+        # decoded_data = decode_base64(encoded_data)
 
         if n_api_key and n_database_id and encoded_data:
 
