@@ -175,7 +175,7 @@ def index():
     try:
         with open(LOG_FILE, "r") as log_file:
             logs = log_file.readlines()[-10:]  # 直近 10 件を取得
-            # logs.reverse()
+            logs.reverse()
     except FileNotFoundError:
         logs = ["ログがありません。"]
 
@@ -191,14 +191,14 @@ def index():
 """
 @app.errorhandler(500)
 def internal_server_error(e):
-    # 500エラーが発生したらログをリセットする
-    if os.path.exists(LOG_FILE):
-        open(LOG_FILE, 'w').close()  # ファイルの中身を空にする
     return redirect(url_for('error_500_page'))
 
 # 500エラーのリダイレクト先ページ
 @app.route("/error_500")
 def error_500_page():
+    # 500エラーが発生したらログをリセットする
+    if os.path.exists(LOG_FILE):
+        open(LOG_FILE, 'w').close()  # ファイルの中身を空にする
     return render_template("500.html"), 500
 
 
