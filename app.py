@@ -27,6 +27,10 @@ app.secret_key = "super_secret_key"  # セッション管理用のキー
 LOG_FILE = "app.log"
 
 # JST（日本時間）にする設定
+logging.basicConfig(filename="app.log",level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s",
+                        datefmt="%Y-%m-%d %H:%M:%S")
+
+"""
 def jst_time(epoch_time=None):
     if epoch_time is None:
         epoch_time = time.time()  # 現在時刻を取得
@@ -34,10 +38,6 @@ def jst_time(epoch_time=None):
 
 logging.Formatter.converter = jst_time
 
-logging.basicConfig(filename="app.log",level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s",
-                        datefmt="%Y-%m-%d %H:%M:%S")
-
-"""
 logging.basicConfig(
     filename=LOG_FILE,
     level=logging.INFO,
