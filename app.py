@@ -12,57 +12,21 @@ import json
 import urllib.parse
 import logging
 import os
-
+from flask import Flask, g, request
+import datetime
+from flask import Flask, render_template, request, session
+import datetime
 
 """
 htmlで入力→Notionに追加
 """
 
+
+
 app = Flask(__name__)
 app.secret_key = "super_secret_key"  # セッション管理用のキー
 
-"""
-ログ設定（ログをファイルに記録）
-"""
-LOG_FILE = "app.log"
 
-# JST（日本時間）にする設定
-logging.basicConfig(filename="app.log",level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s",
-                        datefmt="%Y-%m-%d %H:%M:%S")
-
-"""
-def jst_time(epoch_time=None):
-    if epoch_time is None:
-        epoch_time = time.time()  # 現在時刻を取得
-    return time.localtime(epoch_time + 9 * 3600)  # UTC時間から9時間足す
-
-logging.Formatter.converter = jst_time
-
-logging.basicConfig(
-    filename=LOG_FILE,
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S"
-)
-
-# ログ設定（最大1MB、5ファイルまで保存）
-handler = RotatingFileHandler(LOG_FILE, maxBytes=1_000_000, backupCount=5, encoding="utf-8")
-handler.setLevel(logging.INFO)
-formatter = logging.Formatter("%Y-%m-%d %H:%M:%S - %(levelname)s - %(message)s")
-handler.setFormatter(formatter)
-
-app.logger.addHandler(handler)
-app.logger.setLevel(logging.INFO)
-"""
-
-"""
-logging.basicConfig(
-    filename=LOG_FILE,
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S"
-)
-"""
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 """
@@ -164,11 +128,23 @@ def add_to_notion(n_api_key, n_database_id, character):
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+@app.before_request
+def initialize_log():
+    """リクエストごとに個別ログを初期化"""
+    g.logs = []  # ユーザーごとのログを一時的に保持
+
+def log_message(now_time, message):
+    """個別ログを追加"""
+    log_entry = f"{now_time} - {message}"
+    g.logs.append(log_entry)
+
 """
 メイン
 """
 @app.route("/", methods=["GET", "POST"])
 def index():
+    if "logs" not in session:
+        session["logs"] = []  # 初回アクセス時にログ用のリストを作成
 
     message = ""
 
@@ -196,6 +172,23 @@ def index():
         else:
             message = "⚠️ すべてのフィールドを入力してください"
 
+        # message = request.form.get("message", "ログに追加されました")
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        log_entry = f"{timestamp} - {message}"
+        session["logs"].append(log_entry)  # セッションにログを追加
+        session.modified = True  # セッションを更新（Flask の仕様）
+
+        logs = session["logs"]  # セッションのログを取得
+    return render_template("index.html", logs=logs)  # HTML にログを渡す
+
+
+    """
+
+    if request.method == "POST":
+        now = datetime.datetime.now()
+        now_time = now.strftime('%Y年%m月%d日 %H:%M:%S')
+        log_message(now_time, message)
+
     # ログに出力
     app.logger.info( message )
       # ログファイルを読み込む
@@ -206,7 +199,7 @@ def index():
     except FileNotFoundError:
         logs = ["ログがありません。"]
     
-    """
+
     # ログファイルを読み込む
     logs = []
     try:
@@ -216,12 +209,11 @@ def index():
                 logs.reverse()
     except FileNotFoundError:
         logs = ["ログがありません。"]
-     """
 
     # 過去のデータを取得して表示
     entries = get_entries()
     return render_template("index.html", message=message, entries=entries, logs=logs)
-
+     """
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -237,16 +229,19 @@ def internal_server_error(e):
 def error_500_page():
     return render_template("500.html"), 500
 
-
 """
 1時間キャッシュ
-"""
+
 @app.route('/static/<path:filename>')
 def static_files(filename):
     return send_from_directory('static', filename, cache_timeout=3600)
+"""
 
+@app.after_request
+def clear_log(response):
+    """リクエストが終わったらログを削除"""
+    g.logs = []  # ここでログをクリア
+    return response
 
-if os.path.exists("app.log"):
-    open("app.log", "w").close()
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000, debug=False)

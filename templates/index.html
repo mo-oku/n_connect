@@ -58,15 +58,13 @@
     <table border="1">
         <tr>
             <th>日時</th>
-            <th>レベル</th>
             <th>メッセージ</th>
         </tr>
         {% for log in logs %}
         <tr>
             {% set parts = log.split(" - ") %}
             <td class="time">{{ parts[0] }}</td>
-            <td class="info">{{ parts[1] }}</td>
-            <td class="message">{{ parts[2] }}</td>
+            <td class="message">{{ parts[1] }}</td>
         </tr>
         {% endfor %}
     </table>
