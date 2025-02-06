@@ -4,6 +4,7 @@ from flask import Flask, request, render_template
 from flask import Flask, send_from_directory
 from database import save_entry, get_entries
 from flask import Flask, request
+from datetime import datetime
 import requests
 import base64
 import json
@@ -23,8 +24,13 @@ app.secret_key = "super_secret_key"  # セッション管理用のキー
 ログ設定（ログをファイルに記録）
 """
 LOG_FILE = "app.log"
-logging.basicConfig(filename=LOG_FILE, level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
-
+# ローカル時間（JST）にする設定
+logging.Formatter.converter = datetime.datetime.fromtimestamp
+logging.basicConfig(
+      filename=LOG_FILE, level=logging.INFO,
+      format="%(asctime)s - %(levelname)s - %(message)s",
+      datefmt="%Y-%m-%d %H:%M:%S"
+      )
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 """
@@ -104,7 +110,7 @@ def add_to_notion(n_api_key, n_database_id, character):
         }
     }
     response = requests.post(Notion_url, headers=headers, json=data)
-    
+
     if character["data"]["iconUrl"] :
         # ページの作成とidの取得
         new_page = response.json()
@@ -169,6 +175,7 @@ def index():
     try:
         with open(LOG_FILE, "r") as log_file:
             logs = log_file.readlines()[-10:]  # 直近 10 件を取得
+            logs.reverse()
     except FileNotFoundError:
         logs = ["ログがありません。"]
 
