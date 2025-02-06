@@ -26,7 +26,7 @@ htmlで入力→Notionに追加
 
 app = Flask(__name__)
 app.secret_key = "super_secret_key"  # セッション管理用のキー
-app.permanent_session_lifetime = timedelta(minutes=60) # -> 5分 #(days=5) -> 5日保存
+app.permanent_session_lifetime = timedelta(minutes=1) # -> 5分 #(days=5) -> 5日保存
 
 
 
@@ -135,25 +135,26 @@ def add_to_notion(n_api_key, n_database_id, character):
 """
 @app.route("/", methods=["GET", "POST"])
 def index():
-
     session.permanent = False  # アクセスを切ったらセッションが消える
-    # KeyError を防ぐために空のリストを作成
-    session.setdefault("logs", [])  
+    session.setdefault("logs", []) 
 
+    # KeyError を防ぐために空のリストを作成
+    n_api_key = ""
+    n_database_id = ""
     message = ""
 
     if request.method == "POST":
         encoded_data = request.form["encoded_data"]
-        session["n_api_key"] = request.form["n_api_key"]
-        session["n_database_id"] = request.form["n_database_id"]
+        n_api_key = request.form["n_api_key"]
+        n_database_id = request.form["n_database_id"]
 
-        if session["n_api_key"] and session["n_database_id"] and encoded_data:
-            save_entry(session["n_api_key"], session["n_database_id"], encoded_data)
+        if n_api_key and n_database_id and encoded_data:
+            save_entry(n_api_key, n_database_id, encoded_data)
 
             # デコード処理
             decoded_data = decode_base64(encoded_data)
             if "error" not in decoded_data:
-                success = add_to_notion(session["n_api_key"], session["n_database_id"], decoded_data)
+                success = add_to_notion(n_api_key, n_database_id, decoded_data)
                 if success :
                     message = "✅ データ保存＆Notionに追加成功！" if success else "Notionへの追加失敗"
             else:
@@ -169,11 +170,11 @@ def index():
 
     logs = session["logs"]  # セッションのログを取得
     session.pop('encoded_data', None)
-    
+
     return render_template(
         "index.html",
-        n_api_key=session["n_api_key"],
-        n_database_id=session["n_database_id"],
+        n_api_key = n_api_key,
+        n_database_id = n_database_id,
         message=message,
         logs=logs
     )
