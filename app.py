@@ -4,6 +4,7 @@ from flask import Flask, request, render_template
 from flask import Flask, send_from_directory
 from database import save_entry, get_entries
 from flask import Flask, request
+from logging.handlers import RotatingFileHandler
 import time
 import requests
 import base64
@@ -25,9 +26,6 @@ app.secret_key = "super_secret_key"  # セッション管理用のキー
 """
 LOG_FILE = "app.log"
 
-"""
-ローカル時間（JST）にする設定
-"""
 # JST（日本時間）にする設定
 def jst_time(epoch_time=None):
     if epoch_time is None:
@@ -36,13 +34,24 @@ def jst_time(epoch_time=None):
 
 logging.Formatter.converter = jst_time
 
+# ログ設定（最大1MB、5ファイルまで保存）
+handler = RotatingFileHandler(LOG_FILE, maxBytes=1_000_000, backupCount=5, encoding="utf-8")
+handler.setLevel(logging.INFO)
+formatter = logging.Formatter("%Y-%m-%d %H:%M:%S - %(levelname)s - %(message)s")
+handler.setFormatter(formatter)
 
+app.logger.addHandler(handler)
+app.logger.setLevel(logging.INFO)
+
+
+"""
 logging.basicConfig(
     filename=LOG_FILE,
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S"
 )
+"""
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 """
@@ -181,7 +190,7 @@ def index():
     # ログファイルを読み込む
     logs = []
     try:
-        with open(LOG_FILE, "r") as log_file:
+        with open(LOG_FILE, "r", encoding="utf-8") as log_file:
             logs = log_file.readlines()[-10:]  # 直近 10 件を取得
             if logs:  # ログが存在する場合のみ reverse()
                 logs.reverse()
