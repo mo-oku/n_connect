@@ -10,6 +10,7 @@ import base64
 import json
 import urllib.parse
 import logging
+import os
 
 
 """
@@ -216,5 +217,7 @@ def static_files(filename):
     return send_from_directory('static', filename, cache_timeout=3600)
 
 
+if os.path.exists("app.log"):
+    open("app.log", "w").close()
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000, debug=False)
