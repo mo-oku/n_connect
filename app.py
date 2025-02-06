@@ -145,8 +145,7 @@ def log_message(now_time, message):
 def index():
 
     session.permanent = False  # アクセスを切ったらセッションが消える
-    # KeyError を防ぐために空のリストを作成
-    session.setdefault("logs", [])  
+    session.setdefault("logs", [])  # KeyError を防ぐための初期化
 
     message = ""
 
@@ -154,7 +153,6 @@ def index():
         encoded_data = request.form["encoded_data"]
         n_api_key = request.form["n_api_key"]
         n_database_id = request.form["n_database_id"]
-        # decoded_data = decode_base64(encoded_data)
 
         if n_api_key and n_database_id and encoded_data:
 
@@ -174,13 +172,13 @@ def index():
         else:
             message = "⚠️ すべてのフィールドを入力してください"
 
-        log_message = request.form.get(message)
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        log_entry = f"{timestamp} - {log_message}"
+        log_entry = f"{timestamp} - {message}"
+
         session["logs"].append(log_entry)  # セッションにログを追加
         session.modified = True  # セッションを更新（Flask の仕様）
 
-        logs = session["logs"]  # セッションのログを取得
+    logs = session["logs"]  # セッションのログを取得
     return render_template("index.html", logs=logs)  # HTML にログを渡す
 
 
@@ -246,4 +244,4 @@ def clear_log(response):
     return response
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000, debug=False)
+    app.run(host="0.0.0.0", port=10000, debug=tuple)
