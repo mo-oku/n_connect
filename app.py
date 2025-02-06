@@ -100,6 +100,21 @@ def add_to_notion(n_api_key, n_database_id, character):
         }
     }
     response = requests.post(Notion_url, headers=headers, json=data)
+
+    # ページの作成とidの取得
+    new_page = response.json()
+    new_page_id = new_page["id"]
+
+    # ページにカバー画像を追加
+    add_content_url = f"https://api.notion.com/v1/pages/{new_page_id}"
+    data_add = {
+            "cover": {
+                "type": "external",
+                "external": {
+                              "url": character["data"]["iconUrl"]
+                              }}
+    }
+    response = requests.patch(add_content_url, headers=headers, json=data_add)
     return response.status_code == 200
 
 
@@ -125,14 +140,14 @@ def index():
             decoded_data = decode_base64(encoded_data)
             if "error" not in decoded_data:
                 success = add_to_notion(n_api_key, n_database_id, decoded_data)
-                if success : message = "✅ データ保存＆Notion送信成功："
+                if success : message = "✅ データ保存＆Notionに追加成功！"
 
                 else:
-                    return render_template("index.html", message="Notion追加失敗：")
+                    return render_template("index.html", message="Notionへの追加失敗")
             else:
-                message = "⚠️ デコードエラー："
+                message = "⚠️ デコードエラー"
         else:
-            message = "⚠️ すべてのフィールドを入力してください："
+            message = "⚠️ すべてのフィールドを入力してください"
 
         # ログに出力
         app.logger.info( message )
@@ -159,10 +174,6 @@ def internal_server_error(e):
 def error_500_page():
     return render_template("500.html"), 500
 
-"""例：強制的にエラーを起こす（テスト用）"""
-@app.route("/cause_error")
-def cause_error():
-    1 / 0  # これでゼロ除算エラーを発生させる
 
 
 @app.route('/static/<path:filename>')
