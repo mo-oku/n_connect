@@ -3,13 +3,13 @@ from flask import Flask, render_template, redirect, url_for
 from flask import Flask, request, render_template
 from flask import Flask, send_from_directory
 from database import save_entry, get_entries
-import logging
+from flask import Flask, request
 import requests
 import base64
 import json
 import urllib.parse
-import datetime
-
+import logging
+import os
 
 
 """
@@ -18,15 +18,18 @@ htmlで入力→Notionに追加
 
 app = Flask(__name__)
 app.secret_key = "super_secret_key"  # セッション管理用のキー
-# DB_NAME = "/Users/kosari/Documents/vscode/notion_data.db"
-NOW = datetime.datetime.now() # 時間
 
-# ログ設定（ログをファイルに記録）
+"""
+ログ設定（ログをファイルに記録）
+"""
 LOG_FILE = "app.log"
 logging.basicConfig(filename=LOG_FILE, level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+"""
+デコード処理
+"""
 def decode_base64(encoded_data):
     if encoded_data.endswith('"}]}}') :
         # いあきゃらならそのままJSONに変換
@@ -45,9 +48,10 @@ def decode_base64(encoded_data):
         except Exception as e:
             return {"error": str(e)}
 
-
+"""
+Notionにデータ送信
+"""
 def add_to_notion(n_api_key, n_database_id, character):
-    # Notionにデータを送信
     Notion_url = "https://api.notion.com/v1/pages"
     headers = {
         "Authorization": f"Bearer {n_api_key}",
@@ -120,6 +124,9 @@ def add_to_notion(n_api_key, n_database_id, character):
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+"""
+メイン
+"""
 @app.route("/", methods=["GET", "POST"])
 def index():
 
@@ -140,8 +147,8 @@ def index():
             decoded_data = decode_base64(encoded_data)
             if "error" not in decoded_data:
                 success = add_to_notion(n_api_key, n_database_id, decoded_data)
-                if success : message = "✅ データ保存＆Notionに追加成功！"
-
+                if success :
+                    message = "✅ データ保存＆Notionに追加成功！"
                 else:
                     return render_template("index.html", message="Notionへの追加失敗")
             else:
@@ -164,21 +171,31 @@ def index():
     entries = get_entries()
     return render_template("index.html", message=message, entries=entries, logs=logs)
 
-"""500エラー（Internal Server Error）発生時の処理"""
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+"""
+500エラー（Internal Server Error）発生時の処理
+"""
 @app.errorhandler(500)
 def internal_server_error(e):
+    # 500エラーが発生したらログをリセットする
+    if os.path.exists(LOG_FILE):
+        open(LOG_FILE, 'w').close()  # ファイルの中身を空にする
     return redirect(url_for('error_500_page'))
 
-"""500エラーのリダイレクト先ページ"""
+# 500エラーのリダイレクト先ページ
 @app.route("/error_500")
 def error_500_page():
     return render_template("500.html"), 500
 
 
-
+"""
+1時間キャッシュ
+"""
 @app.route('/static/<path:filename>')
 def static_files(filename):
-    return send_from_directory('static', filename, cache_timeout=3600)  # 1時間キャッシュ
+    return send_from_directory('static', filename, cache_timeout=3600)
 
 
 if __name__ == "__main__":
