@@ -111,7 +111,7 @@ def add_to_notion(n_api_key, n_database_id, character):
             "cover": {
                 "type": "external",
                 "external": {
-                              "url": character["data"]["iconUrl"]
+                              "url": character["data"].get("iconUrl") or ""
                               }}
     }
     response = requests.patch(add_content_url, headers=headers, json=data_add)
