@@ -128,16 +128,6 @@ def add_to_notion(n_api_key, n_database_id, character):
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-@app.before_request
-def initialize_log():
-     # リクエストごとに初期化
-    g.logs = []
-
-def log_message(now_time, message):
-    # 個別ログを追加
-    log_entry = f"{now_time} - {message}"
-    g.logs.append(log_entry)
-
 """
 メイン
 """
@@ -145,13 +135,15 @@ def log_message(now_time, message):
 def index():
 
     session.permanent = False  # アクセスを切ったらセッションが消える
-    # KeyError を防ぐための初期化
-    session.setdefault("logs", [])
-    session.setdefault("n_api_key", "")
-    session.setdefault("n_database_id", "")
+    # セッション初期化（KeyError防止）
+    if "logs" not in session:
+        session["logs"] = []
+    if "n_api_key" not in session:
+        session["n_api_key"] = ""
+    if "n_database_id" not in session:
+        session["n_database_id"] = ""
 
     message = ""
-    logs = []
 
     if request.method == "POST":
         encoded_data = request.form["encoded_data"]
@@ -159,7 +151,6 @@ def index():
         session["n_database_id"] = request.form["n_database_id"]
 
         if session["n_api_key"] and session["n_database_id"] and encoded_data:
-            # データベースに保存
             save_entry(session["n_api_key"], session["n_database_id"], encoded_data)
 
             # デコード処理
@@ -172,9 +163,14 @@ def index():
         else:
             message = "⚠️ すべてのフィールドを入力してください"
         
-        # ログを一時保存
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        logs.append(f"{timestamp} - {message}")
+        # ログをセッションに保存
+        timestamp = datetime.datetime.now() + datetime.timedelta(hours=9).strftime("%Y-%m-%d %H:%M:%S")
+        session["logs"].append(f"{timestamp} - {message}")
+        session.modified = True  # セッション更新
+
+        # セッションのAPIキーとDB IDはリセットしておく（リロード時に消える）
+        session.pop("n_api_key", None)
+        session.pop("n_database_id", None)
 
         # リダイレクトしてリロード時の "POST" を防ぐ
         session["message"] = message  # メッセージをセッションに一時保存
@@ -182,6 +178,7 @@ def index():
 
     # GET リクエスト時はセッションのメッセージを表示し、リセット
     message = session.pop("message", "")
+    logs = session.pop("logs", [])  # セッションのログもリセット
 
     return render_template(
         "index.html",
@@ -212,12 +209,6 @@ def error_500_page():
 def static_files(filename):
     return send_from_directory('static', filename, cache_timeout=3600)
 """
-
-@app.after_request
-def clear_log(response):
-    """リクエストが終わったらログを削除"""
-    g.logs = []  # ここでログをクリア
-    return response
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000, debug=tuple)
