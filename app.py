@@ -143,8 +143,10 @@ def log_message(now_time, message):
 """
 @app.route("/", methods=["GET", "POST"])
 def index():
-    if "logs" not in session:
-        session["logs"] = []  # 初回アクセス時にログ用のリストを作成
+
+    session.permanent = False  # アクセスを切ったらセッションが消える
+    # KeyError を防ぐために空のリストを作成
+    session.setdefault("logs", [])  
 
     message = ""
 
@@ -172,9 +174,9 @@ def index():
         else:
             message = "⚠️ すべてのフィールドを入力してください"
 
-        # message = request.form.get("message", "ログに追加されました")
+        log_message = request.form.get(message)
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        log_entry = f"{timestamp} - {message}"
+        log_entry = f"{timestamp} - {log_message}"
         session["logs"].append(log_entry)  # セッションにログを追加
         session.modified = True  # セッションを更新（Flask の仕様）
 
