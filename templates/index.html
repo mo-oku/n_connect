@@ -39,10 +39,10 @@
 <div class="main">
     <form method="POST">
         <label>Notion API キー</label>
-        <input type="password" name="n_api_key" value="{{ request.form.get('n_api_key', '') }}" required><br><br>
+        <input type="password" name="n_api_key" value="{{ n_api_key }}" required><br><br>
     
         <label>Notion データベース ID</label>
-        <input type="text" name="n_database_id" value="{{ request.form.get('n_database_id', '') }}" required><br><br>
+        <input type="text" name="n_database_id" value="{{ n_database_id }}" required><br><br>
     
         <label>駒データ</label><br>
         <textarea name="encoded_data" placeholder="ココフォリア駒コピーまたはいあきゃら駒出力をここにペースト" required></textarea><br><br>

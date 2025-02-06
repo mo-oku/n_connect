@@ -148,25 +148,22 @@ def index():
     session.setdefault("logs", [])  # KeyError を防ぐための初期化
 
     message = ""
+    logs = []
 
     if request.method == "POST":
         encoded_data = request.form["encoded_data"]
-        n_api_key = request.form["n_api_key"]
-        n_database_id = request.form["n_database_id"]
+        session["n_api_key"] = request.form["n_api_key"]
+        session["n_database_id"] = request.form["n_database_id"]
 
-        if n_api_key and n_database_id and encoded_data:
-
+        if session["n_api_key"] and session["n_database_id"] and encoded_data:
             # データベースに保存
-            save_entry(n_api_key, n_database_id, encoded_data)
+            save_entry(session["n_api_key"], session["n_database_id"], encoded_data)
 
             # デコード処理
             decoded_data = decode_base64(encoded_data)
             if "error" not in decoded_data:
-                success = add_to_notion(n_api_key, n_database_id, decoded_data)
-                if success :
-                    message = "✅ データ保存＆Notionに追加成功！"
-                else:
-                    return render_template("index.html", message="Notionへの追加失敗")
+                success = add_to_notion(session["n_api_key"], session["n_database_id"], decoded_data)
+                message = "✅ データ保存＆Notionに追加成功！" if success else "Notionへの追加失敗"
             else:
                 message = "⚠️ デコードエラー"
         else:
@@ -174,46 +171,15 @@ def index():
 
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         log_entry = f"{timestamp} - {message}"
+        logs.append(log_entry)
 
-        session["logs"].append(log_entry)  # セッションにログを追加
-        session.modified = True  # セッションを更新（Flask の仕様）
-
-    logs = session["logs"]  # セッションのログを取得
-    return render_template("index.html", logs=logs)  # HTML にログを渡す
-
-
-    """
-
-    if request.method == "POST":
-        now = datetime.datetime.now()
-        now_time = now.strftime('%Y年%m月%d日 %H:%M:%S')
-        log_message(now_time, message)
-
-    # ログに出力
-    app.logger.info( message )
-      # ログファイルを読み込む
-    logs = []
-    try:
-        with open(LOG_FILE, "r") as log_file:
-            logs = log_file.readlines()[-10:]  # 直近 10 件を取得
-    except FileNotFoundError:
-        logs = ["ログがありません。"]
-    
-
-    # ログファイルを読み込む
-    logs = []
-    try:
-        with open(LOG_FILE, "r", encoding="utf-8") as log_file:
-            logs = log_file.readlines()[-10:]  # 直近 10 件を取得
-            if logs:  # ログが存在する場合のみ reverse()
-                logs.reverse()
-    except FileNotFoundError:
-        logs = ["ログがありません。"]
-
-    # 過去のデータを取得して表示
-    entries = get_entries()
-    return render_template("index.html", message=message, entries=entries, logs=logs)
-     """
+    return render_template(
+        "index.html",
+        n_api_key=session["n_api_key"],
+        n_database_id=session["n_database_id"],
+        message=message,
+        logs=logs
+    )
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
