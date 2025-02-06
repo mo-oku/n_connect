@@ -175,7 +175,7 @@ def index():
     try:
         with open(LOG_FILE, "r") as log_file:
             logs = log_file.readlines()[-10:]  # 直近 10 件を取得
-            logs.reverse()
+            # logs.reverse()
     except FileNotFoundError:
         logs = ["ログがありません。"]
 
