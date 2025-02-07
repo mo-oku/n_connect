@@ -76,6 +76,13 @@ def add_to_notion(n_api_key, n_database_id, character):
         label: {"number": int(character["data"].get("params", [{}])[i].get("value", 0))}
         for i, label in enumerate(params_labels)
     }
+    # ココフォ貼り付けデータのジャッジ
+    json_data = len(json.dumps(character, ensure_ascii=False))
+    if json_data > 2000 :
+        important_keys = ["name", "initiative", "externalUrl", "status", "params", "iconUrl", "faces", "color"]
+        trimmed_data = {key: character["data"][key] for key in important_keys if key in character["data"]}
+        json_data = '{"kind": "character", "data": ' + json.dumps(trimmed_data, ensure_ascii=False) + "}"
+
 
     data = {
         "parent": {"database_id": n_database_id},
@@ -91,7 +98,7 @@ def add_to_notion(n_api_key, n_database_id, character):
             },
             "アイコンURL": {"url": character["data"]["iconUrl"] or None},
             "ココフォリアに貼り付け": {
-                "rich_text": [{"text": {"content": json.dumps(character, ensure_ascii=False)}}]
+                "rich_text": [{"text": {"content": json_data }}]
             },
             "チャットパレット": {
                 "rich_text": [{"text": {"content": character["data"]["commands"]}}]
