@@ -26,7 +26,7 @@ htmlで入力→Notionに追加
 
 app = Flask(__name__)
 app.secret_key = "super_secret_key"  # セッション管理用のキー
-app.permanent_session_lifetime = timedelta(minutes=1) # -> 5分 #(days=5) -> 5日保存
+app.permanent_session_lifetime = timedelta(minutes=10) # -> 5分 #(days=5) -> 5日保存
 
 
 
@@ -168,7 +168,8 @@ def index():
         session["logs"].append(log_entry)  # セッションにログを追加
         session.modified = True  # セッションを更新（Flask の仕様）
 
-    logs = session["logs"]  # セッションのログを取得
+    session_logs = session["logs"][-10:]  # セッションのログを取得
+    logs = session_logs.reverse()
     session.pop('encoded_data', None)
 
     return render_template(
