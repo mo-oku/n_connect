@@ -166,10 +166,11 @@ def index():
         log_entry = f"{timestamp} - {message}"
 
         session["logs"].append(log_entry)  # セッションにログを追加
+        session["logs"] = session["logs"][-10:]
         session.modified = True  # セッションを更新（Flask の仕様）
 
-    session_logs = session["logs"][-10:]  # セッションのログを取得
-    logs = session_logs.reverse()
+    logs = session["logs"][::-1]
+    
     session.pop('encoded_data', None)
 
     return render_template(
