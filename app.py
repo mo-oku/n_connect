@@ -170,7 +170,7 @@ def index():
         session.modified = True  # セッションを更新（Flask の仕様）
 
     logs = session["logs"][::-1]
-    
+
     session.pop('encoded_data', None)
 
     return render_template(
@@ -204,4 +204,4 @@ def static_files(filename):
 """
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000, debug=True)
+    app.run(host="0.0.0.0", port=10000, debug=False)
