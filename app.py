@@ -82,7 +82,7 @@ def add_to_notion(n_api_key, n_database_id, character):
         important_keys = ["name", "initiative", "externalUrl", "status", "params", "iconUrl", "faces", "color"]
         trimmed_data = {key: character["data"][key] for key in important_keys if key in character["data"]}
         json_data = '{"kind": "character", "data": ' + json.dumps(trimmed_data, ensure_ascii=False) + "}"
-
+    json_data = character
 
     data = {
         "parent": {"database_id": n_database_id},
@@ -98,7 +98,7 @@ def add_to_notion(n_api_key, n_database_id, character):
             },
             "アイコンURL": {"url": character["data"]["iconUrl"] or None},
             "ココフォリアに貼り付け": {
-                "rich_text": [{"text": {"content": json_data }}]
+                "rich_text": [{"text": {"content": str(json_data) }}]
             },
             "チャットパレット": {
                 "rich_text": [{"text": {"content": character["data"]["commands"]}}]
@@ -110,11 +110,14 @@ def add_to_notion(n_api_key, n_database_id, character):
                 "url": character["data"].get("externalUrl") or None
             },
             "カラーコード": {
-                "rich_text": [{"text": {"content":  '$$\color{#FFFFFF}\colorbox{' + character["data"].get("color") + '}{\\textsf{' + character["data"].get("color")[1:] + '}}$$'}}]
+                "rich_text": [{"text": {"content":  r'$$\color{#FFFFFF}\colorbox{' + character["data"].get("color") + r'}{\textsf{' + character["data"].get("color")[1:] + '}}$$'}}]
+
+                
             }
         }
     }
     response = requests.post(Notion_url, headers=headers, json=data)
+    print("Notion API レスポンス:", response.status_code, response.text)
 
     if character["data"]["iconUrl"] :
         # ページの作成とidの取得
