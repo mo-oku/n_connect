@@ -36,12 +36,14 @@ app.permanent_session_lifetime = timedelta(minutes=10) # -> 5分 #(days=5) -> 5�
 """
 def decode_base64(encoded_data):
     if encoded_data.endswith('"}]}}') :
+        print("いあきゃら駒をjson変換")
         # いあきゃらならそのままJSONに変換
         json_data = json.loads(encoded_data[:-2] + ',"faces": [],"color":"#888888","memo":""' + encoded_data[-2:])
         return json_data
     
     else :
         # ココフォならBase64デコードしてJSONに変換
+        print("ココフォリアの駒データをデコードしてjson変換")
         try:
             decoded_bytes = base64.b64decode(encoded_data.removeprefix('{"kind":"encoded","data":"').removesuffix('"}'))
             decoded_str = decoded_bytes.decode("utf-8")
@@ -56,6 +58,7 @@ def decode_base64(encoded_data):
 Notionにデータ送信
 """
 def add_to_notion(n_api_key, n_database_id, character):
+    print("Notionに送信")
     Notion_url = "https://api.notion.com/v1/pages"
     headers = {
         "Authorization": f"Bearer {n_api_key}",
@@ -79,10 +82,13 @@ def add_to_notion(n_api_key, n_database_id, character):
     # ココフォ貼り付けデータのジャッジ
     json_data = len(json.dumps(character, ensure_ascii=False))
     if json_data > 2000 :
+        print(f"チャパレ貼り付け文字数が2000over:{json_data}")
         important_keys = ["name", "initiative", "externalUrl", "status", "params", "iconUrl", "faces", "color"]
         trimmed_data = {key: character["data"][key] for key in important_keys if key in character["data"]}
         json_data = '{"kind": "character", "data": ' + json.dumps(trimmed_data, ensure_ascii=False) + "}"
-    json_data = character
+    else :
+        print(f"チャパレ貼り付け文字数が2000以内:{json_data}")
+        json_data = character
 
     data = {
         "parent": {"database_id": n_database_id},
@@ -117,9 +123,15 @@ def add_to_notion(n_api_key, n_database_id, character):
         }
     }
     response = requests.post(Notion_url, headers=headers, json=data)
-    print("Notion API レスポンス:", response.status_code, response.text)
+    if response.status_code == 400 :
+        print("Notion API レスポンス:", response.status_code, response.text)
+    else :
+        response_json = json.loads(response.text)
+        print("Notion API レスポンス:", response.status_code, "タイトル:",response_json["properties"]["名前"]["title"])
+
 
     if character["data"]["iconUrl"] :
+        print("カバー画像設定")
         # ページの作成とidの取得
         new_page = response.json()
         new_page_id = new_page["id"]
@@ -157,6 +169,7 @@ def index():
         encoded_data = request.form["encoded_data"]
         n_api_key = request.form["n_api_key"]
         n_database_id = request.form["n_database_id"]
+        print(f"データベースID:{n_database_id}")
 
         if n_api_key and n_database_id and encoded_data:
             save_entry(n_api_key, n_database_id, encoded_data)
@@ -174,6 +187,7 @@ def index():
 
         timestamp = (datetime.datetime.now() + datetime.timedelta(hours=9)).strftime("%Y-%m-%d %H:%M:%S")
         log_entry = f"{timestamp} - {message}"
+        print(f"message:{message}")
 
         session["logs"].append(log_entry)  # セッションにログを追加
         session["logs"] = session["logs"][-10:]
