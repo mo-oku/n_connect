@@ -212,11 +212,13 @@ def index():
 """
 @app.errorhandler(500)
 def internal_server_error(e):
+    print("500エラー")
     return redirect(url_for('error_500_page'))
 
 # 500エラーのリダイレクト先ページ
 @app.route("/error_500")
 def error_500_page():
+    print("500エラーページリダイレクト")
     return render_template("500.html"), 500
 
 """
