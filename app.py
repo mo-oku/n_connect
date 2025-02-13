@@ -83,7 +83,7 @@ def add_to_notion(n_api_key, n_database_id, character):
     json_data = len(json.dumps(character, ensure_ascii=False))
     if json_data > 2000 :
         print(f"チャパレ貼り付け文字数が2000over:{json_data}")
-        important_keys = ["name", "initiative", "externalUrl", "status", "params", "iconUrl", "faces", "color"]
+        important_keys = ["name", "initiative", "externalUrl", "status", "params", "iconUrl", "color"]
         trimmed_data = {key: character["data"][key] for key in important_keys if key in character["data"]}
         json_data = '{"kind": "character", "data": ' + json.dumps(trimmed_data, ensure_ascii=False) + "}"
     else :
